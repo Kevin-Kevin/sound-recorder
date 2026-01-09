@@ -97,12 +97,12 @@
             width: 100vw;
             height: 100vh;
             margin: 0;
-            background-color: #000;
+            background-color: #f2f2f5;
         }
         .waveform-container:fullscreen canvas,
         .waveform-container:-webkit-full-screen canvas {
             border-radius: 0;
-            background-color: #000;
+            background-color: #f2f2f5;
         }
         #timer {
             font-size: 28px;
@@ -537,7 +537,7 @@
                 }
             } else {
                 const isFullscreen = !!document.fullscreenElement || !!document.webkitFullscreenElement;
-                ctx.fillStyle = isFullscreen ? '#000' : '#f2f2f5';
+                ctx.fillStyle = isFullscreen ? '#f2f2f5' : '#f2f2f5';
                 ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
                 volumeLevel.style.width = '0%';
                 needUpdateDb = true;
@@ -549,7 +549,7 @@
 
             if (currentFreqArray) {
                 const isFullscreen = !!document.fullscreenElement || !!document.webkitFullscreenElement;
-                const bgColor = isFullscreen ? '#000' : '#f2f2f5';
+                const bgColor = isFullscreen ? '#f2f2f5' : '#f2f2f5';
                 ctx.fillStyle = bgColor;
                 ctx.fillRect(0, 0, waveformContainer.clientWidth, waveformContainer.clientHeight);
 
