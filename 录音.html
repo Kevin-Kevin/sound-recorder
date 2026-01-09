@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>专业网页录音软件（Safari 适配版）</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+            color: #1d1d1f;
+            touch-action: manipulation;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 32px 16px;
+            width: 90%;
+            max-width: 460px;
+            text-align: center;
+        }
+        h1 { font-size: 24px; margin-bottom: 20px; font-weight: 600; }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 16px 0;
+            border-radius: 10px;
+            border: 1px solid #d2d2d7;
+            background-color: #f9f9f9;
+            font-size: 16px;
+        }
+        /* 新增：Safari 专属获取权限按钮（默认隐藏，仅 Safari 显示） */
+        .safari-get-permission-btn {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 0 0 16px 0;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            display: none; /* 默认隐藏 */
+        }
+        .safari-get-permission-btn:disabled {
+            background-color: #c7c7cc;
+            cursor: not-allowed;
+        }
+        .safari-get-permission-btn:hover:not(:disabled) {
+            background-color: #005edc;
+        }
+        .waveform-container {
+            position: relative;
+            width: 100%;
+            height: 160px;
+            margin-bottom: 12px;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            background-color: #f2f2f5;
+            border-radius: 12px;
+        }
+        .fullscreen-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+            z-index: 10;
+        }
+        .fullscreen-btn:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .waveform-container:fullscreen,
+        .waveform-container:-webkit-full-screen {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+        }
+        .waveform-container:fullscreen canvas,
+        .waveform-container:-webkit-full-screen canvas {
+            border-radius: 0;
+            background-color: #000;
+        }
+        #timer {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 8px 0;
+            color: #007aff;
+        }
+        #decibel {
+            font-size: 18px;
+            color: #86868b;
+            margin: 4px 0;
+        }
+        .volume-meter {
+            height: 16px;
+            background-color: #e5e5ea;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0;
+            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .volume-level {
+            height: 100%;
+            width: 0%;
+            border-radius: 8px;
+            transition: width 0.15s ease, background-color 0.2s ease;
+            position: relative;
+        }
+        .volume-level::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #30d158 60%, #ff9f0a 85%, #ff453a);
+            opacity: 0.3;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 100px;
+        }
+        button:hover:not(:disabled) {
+            background-color: #005edc;
+        }
+        button:disabled {
+            background-color: #c7c7cc;
+            cursor: not-allowed;
+        }
+        audio {
+            width: 100%;
+            margin-top: 20px;
+        }
+        #status {
+            font-size: 15px;
+            color: #86868b;
+            margin-bottom: 12px;
+            min-height: 22px;
+        }
+        .error {
+            color: #ff3b30;
+            font-weight: 500;
+        }
+        .permission-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .permission-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            border-radius: 18px;
+            padding: 32px;
+            width: 85%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #007aff;
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .modal-desc {
+            color: #86868b;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        .modal-button {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .modal-button:hover {
+            background-color: #005edc;
+        }
+    </style>
+</head>
+<body>
+    <div class="permission-modal" id="permissionModal">
+        <div class="modal-content">
+            <div class="modal-icon">🎙️</div>
+            <div class="modal-title">需要麦克风权限</div>
+            <div class="modal-desc">为了让你使用录音功能，我们需要访问你的麦克风。权限仅用于录音，不会收集其他信息。</div>
+            <button class="modal-button" id="allowMicBtn">允许访问麦克风</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>专业网页录音软件</h1>
+        
+        <!-- 新增：Safari 专属获取麦克风权限按钮（默认隐藏） -->
+        <button class="safari-get-permission-btn" id="safariGetMicPermissionBtn">获取麦克风权限</button>
+        
+        <select id="micSelect">
+            <option value="">未加载麦克风</option>
+        </select>
+        
+        <div class="waveform-container" id="waveformContainer">
+            <canvas id="waveform"></canvas>
+            <button class="fullscreen-btn" id="fullscreenBtn" title="全屏频率图">⛶</button>
+        </div>
+        
+        <div id="status">正在检查麦克风权限...</div>
+        
+        <div id="timer">00:00</div>
+        <div id="decibel">-60.0 dB</div>
+        
+        <div class="volume-meter">
+            <div class="volume-level" id="volumeLevel"></div>
+        </div>
+        
+        <div class="buttons">
+            <button id="startBtn" disabled>开始录制</button>
+            <button id="stopBtn" disabled>停止录制</button>
+            <button id="saveBtn" disabled>保存录音</button>
+        </div>
+        
+        <audio id="audioPlayback" controls></audio>
+    </div>
+
+    <script>
+        let stream = null;
+        let mediaRecorder = null;
+        let analyser = null;
+        let playAnalyser = null;
+        let freqArray = null;
+        let playFreqArray = null;
+        let recordedBlob = null;
+        let isRecording = false;
+        let isPlaying = false;
+        let startTime = null;
+        let timerInterval = null;
+        let audioContext = null;
+        let audioTotalDuration = 0;
+        let lastDbUpdateTime = 0;
+        const dbUpdateInterval = 200;
+        const waveformContainer = document.getElementById('waveformContainer');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const canvas = document.getElementById('waveform');
+        const permissionModal = document.getElementById('permissionModal');
+        const allowMicBtn = document.getElementById('allowMicBtn');
+        // 新增：Safari 专属按钮 DOM 变量
+        const safariGetMicPermissionBtn = document.getElementById('safariGetMicPermissionBtn');
+
+        const micSelect = document.getElementById('micSelect');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const status = document.getElementById('status');
+        const timerDisplay = document.getElementById('timer');
+        const decibelDisplay = document.getElementById('decibel');
+        const volumeLevel = document.getElementById('volumeLevel');
+        const ctx = canvas.getContext('2d');
+        const audioPlayback = document.getElementById('audioPlayback');
+
+        // ========== 新增：核心1：检测是否为 Safari 浏览器（精准判断） ==========
+        function isSafari() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isSafariBrowser = /safari/.test(userAgent) && !/chrome|firefox|edge|brave|opera/.test(userAgent);
+            return isSafariBrowser;
+        }
+
+        // ========== 新增：核心2：Safari 适配初始化（控制弹窗/按钮显示隐藏） ==========
+        function initSafariAdaptation() {
+            const isSafariBrowser = isSafari();
+            if (isSafariBrowser) {
+                // Safari 浏览器：隐藏弹窗，显示页面内按钮，更新状态提示
+                permissionModal.style.display = 'none'; // 彻底隐藏弹窗（避免show类干扰）
+                safariGetMicPermissionBtn.style.display = 'block';
+                status.textContent = '请点击「获取麦克风权限」按钮以继续';
+            } else {
+                // 非 Safari 浏览器：隐藏专属按钮，保持原有弹窗逻辑不变
+                safariGetMicPermissionBtn.style.display = 'none';
+            }
+        }
+
+        // ========== 新增：核心3：Safari 按钮点击事件（绑定权限请求逻辑） ==========
+        function bindSafariBtnEvent() {
+            safariGetMicPermissionBtn.addEventListener('click', async function() {
+                // 禁用按钮，避免重复点击
+                this.disabled = true;
+                this.textContent = '正在请求权限...';
+                status.classList.remove('error');
+                status.textContent = '正在请求系统麦克风权限...';
+
+                try {
+                    // 直接复用原有核心逻辑：加载麦克风并捕获流
+                    await loadMicrophonesAndCapture();
+                    // Safari 权限请求成功后，更新按钮状态
+                    this.textContent = '权限已获取';
+                } catch (err) {
+                    // 失败后重置按钮状态，方便重新尝试
+                    this.disabled = false;
+                    this.textContent = '重新获取麦克风权限';
+                    // 错误提示已在 loadMicrophonesAndCapture 中处理，无需重复编写
+                }
+            });
+        }
+
+        // ========== 核心修复1：权限检测 + 兼容 iOS ==========
+        async function checkMicPermission() {
+            // 先执行 Safari 适配初始化（优先保证 Safari 样式正确）
+            initSafariAdaptation();
+            // 绑定 Safari 按钮事件
+            bindSafariBtnEvent();
+
+            // 非 Safari 浏览器，继续原有权限检测逻辑（不改动）
+            const isSafariBrowser = isSafari();
+            if (isSafariBrowser) return; // Safari 已通过按钮触发，跳过原有弹窗逻辑
+
+            try {
+                // 先检测 mediaDevices 是否存在（修复 undefined 问题）
+                if (!navigator || !navigator.mediaDevices) {
+                    throw new Error('当前浏览器不支持录音功能，请更新浏览器至最新版本');
+                }
+
+                // 检测浏览器是否支持权限查询 API
+                if (navigator.permissions) {
+                    const permissionStatus = await navigator.permissions.query({
+                        name: 'microphone'
+                    });
+
+                    switch (permissionStatus.state) {
+                        case 'granted':
+                            status.textContent = '麦克风权限已授予，正在加载设备...';
+                            await loadMicrophonesAndCapture();
+                            break;
+                        case 'denied':
+                            status.textContent = '麦克风权限已被拒绝，请前往浏览器设置开启麦克风权限';
+                            status.classList.add('error');
+                            break;
+                        case 'prompt':
+                            status.textContent = '请点击弹窗中的按钮以获取麦克风权限...';
+                            permissionModal.classList.add('show');
+                            break;
+                    }
+
+                    permissionStatus.addEventListener('change', () => {
+                        if (permissionStatus.state === 'granted') {
+                            status.classList.remove('error');
+                            checkMicPermission();
+                        }
+                    });
+                } else {
+                    // 不支持权限查询，直接显示弹窗
+                    status.textContent = '请点击弹窗中的按钮以获取麦克风权限...';
+                    permissionModal.classList.add('show');
+                }
+            } catch (err) {
+                status.textContent = '权限检测失败：' + err.message;
+                status.classList.add('error');
+                permissionModal.classList.add('show'); // 降级显示弹窗
+            }
+        }
+
+        // ========== 核心修复2：修正大小写 + 调整 enumerateDevices 调用时机（原有逻辑不变） ==========
+        async function loadMicrophonesAndCapture() {
+            try {
+                // 步骤1：先获取媒体流权限（Safari 要求必须先授权，再枚举设备）
+                const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // 步骤2：修正大小写：navigator.mediaDevices.enumerateDevices()（D 大写）
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const mics = devices.filter(d => d.kind === 'audioinput');
+
+                // 步骤3：释放临时流（避免占用设备）
+                tempStream.getTracks().forEach(track => track.stop());
+
+                micSelect.innerHTML = '';
+                if (mics.length === 0) {
+                    micSelect.innerHTML = '<option>未检测到麦克风</option>';
+                    status.textContent = '未找到麦克风设备，无法捕获声音';
+                    status.classList.add('error');
+                    return;
+                }
+
+                // 填充麦克风列表
+                mics.forEach((mic, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = mic.deviceId;
+                    opt.text = mic.label || `麦克风 ${i + 1}`; // Safari 授权后才会显示 label
+                    micSelect.appendChild(opt);
+                });
+
+                // 捕获第一个麦克风的流
+                const firstMicDeviceId = mics[0].deviceId;
+                micSelect.value = firstMicDeviceId;
+                await captureAudioStream(firstMicDeviceId);
+            } catch (err) {
+                if (err.name === 'NotAllowedError') {
+                    const tip = isSafari() 
+                        ? '麦克风权限被拒绝，请前往「设置 → Safari → 麦克风」开启'
+                        : '麦克风权限被拒绝，请前往浏览器设置开启麦克风权限';
+                    status.textContent = tip;
+                } else if (err.name === 'NotFoundError') {
+                    status.textContent = '未找到麦克风设备，请检查硬件连接';
+                } else {
+                    status.textContent = '加载麦克风失败：' + err.message;
+                }
+                status.classList.add('error');
+            }
+        }
+
+        // 页面加载初始化
+        window.addEventListener('load', () => {
+            drawFrequencySpectrum();
+            checkMicPermission();
+        });
+
+        // ========== 其余功能代码（完全保留你的原始代码，无任何修改） ==========
+        function resizeCanvas() {
+            const containerWidth = waveformContainer.clientWidth;
+            const containerHeight = waveformContainer.clientHeight;
+            canvas.width = containerWidth * devicePixelRatio;
+            canvas.height = containerHeight * devicePixelRatio;
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        function calculateDecibel(freqData) {
+            let sum = 0;
+            for (let i = 0; i < freqData.length; i++) {
+                sum += freqData[i] * freqData[i];
+            }
+            const rms = Math.sqrt(sum / freqData.length);
+            const db = 20 * Math.log10(rms / 255 || 0.0001);
+            return Math.max(db, -60).toFixed(1);
+        }
+
+        function formatTime(seconds) {
+            const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const secs = String(Math.floor(seconds % 60)).padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+
+        function formatPlayTime(current, total) {
+            return `${formatTime(current)}/${formatTime(total)}`;
+        }
+
+        function drawFrequencySpectrum() {
+            requestAnimationFrame(drawFrequencySpectrum);
+            const now = Date.now();
+
+            let currentFreqArray = null;
+            let currentDb = "-60.0";
+            let volumePercent = 0;
+            let needUpdateDb = false;
+
+            if (isRecording && analyser && freqArray) {
+                analyser.getByteFrequencyData(freqArray);
+                currentFreqArray = freqArray;
+                volumePercent = (Math.max(...freqArray) / 255) * 100;
+                if (now - lastDbUpdateTime >= dbUpdateInterval) {
+                    currentDb = calculateDecibel(freqArray);
+                    needUpdateDb = true;
+                    lastDbUpdateTime = now;
+                }
+            } else if (isPlaying && playAnalyser && playFreqArray) {
+                playAnalyser.getByteFrequencyData(playFreqArray);
+                currentFreqArray = playFreqArray;
+                volumePercent = (Math.max(...playFreqArray) / 255) * 100;
+                if (now - lastDbUpdateTime >= dbUpdateInterval) {
+                    currentDb = calculateDecibel(playFreqArray);
+                    needUpdateDb = true;
+                    lastDbUpdateTime = now;
+                }
+            } else if (analyser && freqArray && !isRecording && !isPlaying) {
+                analyser.getByteFrequencyData(freqArray);
+                currentFreqArray = freqArray;
+                volumePercent = (Math.max(...freqArray) / 255) * 100;
+                if (now - lastDbUpdateTime >= dbUpdateInterval) {
+                    currentDb = calculateDecibel(freqArray);
+                    needUpdateDb = true;
+                    lastDbUpdateTime = now;
+                }
+            } else {
+                const isFullscreen = !!document.fullscreenElement || !!document.webkitFullscreenElement;
+                ctx.fillStyle = isFullscreen ? '#000' : '#f2f2f5';
+                ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+                volumeLevel.style.width = '0%';
+                needUpdateDb = true;
+            }
+
+            if (needUpdateDb) {
+                decibelDisplay.textContent = `${currentDb} dB`;
+            }
+
+            if (currentFreqArray) {
+                const isFullscreen = !!document.fullscreenElement || !!document.webkitFullscreenElement;
+                const bgColor = isFullscreen ? '#000' : '#f2f2f5';
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0, 0, waveformContainer.clientWidth, waveformContainer.clientHeight);
+
+                const barWidth = (waveformContainer.clientWidth / currentFreqArray.length) * 2.5;
+                const maxHeight = waveformContainer.clientHeight * 0.8;
+                let x = 0;
+
+                for (let i = 0; i < currentFreqArray.length; i++) {
+                    const rawValue = currentFreqArray[i];
+                    const normalizedLinearValue = rawValue / 255;
+                    const normalizedNonLinearValue = Math.sqrt(normalizedLinearValue);
+                    const barHeight = normalizedNonLinearValue * maxHeight;
+
+                    const hue = (i / currentFreqArray.length) * 120;
+                    ctx.fillStyle = `hsl(${120 - hue}, 100%, 50%)`;
+                    ctx.fillRect(x, waveformContainer.clientHeight - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+            }
+
+            volumeLevel.style.width = `${volumePercent}%`;
+            if (volumePercent <= 60) {
+                volumeLevel.style.backgroundColor = '#30d158';
+            } else if (volumePercent <= 85) {
+                volumeLevel.style.backgroundColor = '#ff9f0a';
+            } else {
+                volumeLevel.style.backgroundColor = '#ff453a';
+            }
+        }
+
+        function updateRecordTimer() {
+            if (!startTime) return;
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            timerDisplay.textContent = formatTime(elapsed);
+        }
+
+        function initPlaybackAnalyser() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (playAnalyser && playFreqArray) {
+                return;
+            }
+            playAnalyser = audioContext.createAnalyser();
+            playAnalyser.fftSize = 2048;
+            playFreqArray = new Uint8Array(playAnalyser.frequencyBinCount);
+
+            try {
+                const source = audioContext.createMediaElementSource(audioPlayback);
+                source.connect(playAnalyser);
+                playAnalyser.connect(audioContext.destination);
+            } catch (err) {
+                status.textContent = '播放分析器初始化失败：' + err.message;
+                status.classList.add('error');
+            }
+        }
+
+        async function captureAudioStream(deviceId = null) {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+
+            try {
+                // 修正大小写：navigator.mediaDevices.getUserMedia()
+                stream = await navigator.mediaDevices.getUserMedia({
+                    audio: deviceId ? { deviceId: { exact: deviceId }, echoCancellation: true } : { echoCancellation: true }
+                });
+
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+                freqArray = new Uint8Array(analyser.frequencyBinCount);
+
+                status.textContent = '捕获声音中（未录音）';
+                startBtn.disabled = false;
+            } catch (err) {
+                if (err.name === 'NotAllowedError') {
+                    const tip = isSafari() 
+                        ? '麦克风权限被拒绝，请前往「设置 → Safari → 麦克风」开启'
+                        : '麦克风权限被拒绝，请前往浏览器设置开启麦克风权限';
+                    status.textContent = tip;
+                } else if (err.name === 'NotFoundError') {
+                    status.textContent = '未找到麦克风设备，请检查硬件连接';
+                } else if (err.name === 'NotReadableError') {
+                    status.textContent = '麦克风被其他应用占用，请关闭占用程序后重试';
+                } else {
+                    status.textContent = '捕获声音失败：' + err.message;
+                }
+                status.classList.add('error');
+                startBtn.disabled = true;
+            }
+        }
+
+        function initMediaRecorder() {
+            if (!stream || mediaRecorder) return;
+
+            // Safari 支持的格式优先
+            const SUPPORTED_MIME_TYPES = ['audio/mp4;codecs=mp4a.40.2', 'audio/m4a', 'audio/webm;codecs=opus'];
+            let mimeType = '';
+            for (const type of SUPPORTED_MIME_TYPES) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    mimeType = type;
+                    break;
+                }
+            }
+            if (!mimeType) mimeType = 'audio/webm';
+
+            mediaRecorder = new MediaRecorder(stream, { mimeType });
+            const chunks = [];
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+            mediaRecorder.onstop = () => {
+                recordedBlob = new Blob(chunks, { type: mimeType });
+                audioPlayback.src = URL.createObjectURL(recordedBlob);
+                saveBtn.disabled = false;
+                isRecording = false;
+                timerDisplay.textContent = formatPlayTime(0, audioTotalDuration || 0);
+                status.textContent = '录制完成，可试听或保存（仍在捕获声音）';
+                clearInterval(timerInterval);
+            };
+        }
+
+        function toggleFullscreen() {
+            const isFullscreen = !!document.fullscreenElement || !!document.webkitFullscreenElement;
+
+            if (!isFullscreen) {
+                if (waveformContainer.requestFullscreen) {
+                    waveformContainer.requestFullscreen();
+                } else if (waveformContainer.webkitRequestFullScreen) {
+                    waveformContainer.webkitRequestFullScreen();
+                }
+                fullscreenBtn.innerHTML = '❌';
+                fullscreenBtn.title = '退出全屏频率图';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                fullscreenBtn.innerHTML = '⛶';
+                fullscreenBtn.title = '全屏频率图';
+            }
+            resizeCanvas();
+        }
+
+        function handleFullscreenChange() {
+            const isFullscreen = !!document.fullscreenElement || !!document.webkitFullscreenElement;
+
+            if (isFullscreen) {
+                fullscreenBtn.innerHTML = '❌';
+                fullscreenBtn.title = '退出全屏频率图';
+            } else {
+                fullscreenBtn.innerHTML = '⛶';
+                fullscreenBtn.title = '全屏频率图';
+            }
+            resizeCanvas();
+        }
+
+        // 事件绑定
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        micSelect.addEventListener('change', () => {
+            if (micSelect.value) {
+                captureAudioStream(micSelect.value);
+            }
+        });
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        allowMicBtn.addEventListener('click', async () => {
+            permissionModal.classList.remove('show');
+            await loadMicrophonesAndCapture();
+        });
+        startBtn.onclick = () => {
+            if (!stream || isRecording) return;
+            initMediaRecorder();
+            if (!mediaRecorder) return;
+            mediaRecorder.start();
+            isRecording = true;
+            startTime = Date.now();
+            timerInterval = setInterval(updateRecordTimer, 200);
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            saveBtn.disabled = true;
+            status.textContent = '正在录制中（同时捕获声音）';
+        };
+        stopBtn.onclick = () => {
+            if (mediaRecorder?.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        };
+        saveBtn.onclick = () => {
+            if (!recordedBlob) return;
+            const url = URL.createObjectURL(recordedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            const ext = recordedBlob.type.includes('mp4') ? 'm4a' : 'webm';
+            a.download = `录音_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.${ext}`;
+            a.click();
+            URL.revokeObjectURL(url);
+            status.textContent = '已保存录音文件（仍在捕获声音）';
+        };
+        audioPlayback.addEventListener('loadedmetadata', () => {
+            audioTotalDuration = audioPlayback.duration || 0;
+            if (!isRecording) {
+                timerDisplay.textContent = formatPlayTime(0, audioTotalDuration);
+            }
+        });
+        audioPlayback.addEventListener('play', async () => {
+            isPlaying = true;
+            if (audioContext && audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            initPlaybackAnalyser();
+            status.textContent = '正在播放录音（暂停捕获声音）';
+        });
+        audioPlayback.addEventListener('pause', () => {
+            isPlaying = false;
+            status.textContent = '播放已暂停（恢复捕获声音）';
+        });
+        audioPlayback.addEventListener('ended', () => {
+            isPlaying = false;
+            status.textContent = '播放已结束（恢复捕获声音）';
+            timerDisplay.textContent = formatPlayTime(0, audioTotalDuration);
+        });
+        audioPlayback.addEventListener('timeupdate', () => {
+            if (!isRecording && audioTotalDuration > 0) {
+                timerDisplay.textContent = formatPlayTime(audioPlayback.currentTime, audioTotalDuration);
+            }
+        });
+    </script>
+</body>
+</html>
