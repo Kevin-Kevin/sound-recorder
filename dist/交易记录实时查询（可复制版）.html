@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <title>Polymarket 用户trades分页查询器（Tabulator 版）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    :root {
+        /* 浅灰主色调（极致护眼 + 高对比） */
+        --bg-color:      #f6f8fa;    /* 页面背景 */
+        --card-bg:       #ffffff;    /* 卡片/表格背景 */
+        --text-color:    #1f2328;    /* 主文字 */
+        --text-muted:    #656d76;    /* 次要文字 */
+        --border-color:  #d0d7de;    /* 边框 */
+        --accent-color:  #0969da;    /* 主蓝 */
+        --green:         #2ea44f;    /* YES 绿 */
+        --red:           #cf222e;    /* NO 红 */
+        --hover:         #f3f4f6;    /* 行悬停 */
+        --shadow:        0 1px 3px rgba(27,31,36,0.08), 0 8px 24px rgba(27,31,36,0.08);
+    }
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container { 
+        max-width: 1600px; 
+        margin: 0 auto; 
+        padding: 12px 16px; 
+        flex-grow: 1; 
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    h1 {
+        text-align: center;
+        color: var(--accent-color);
+        font-size: 2.2em;
+        margin-top: 0; 
+        margin-bottom: 12px; 
+        font-weight: 600;
+    }
+
+    .controls-container {
+        background: var(--card-bg);
+        padding: 16px; 
+        border-radius: 8px; 
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between; 
+        align-items: center;
+        gap: 12px; 
+        margin-bottom: 12px; 
+    }
+
+    .address-group { flex-grow: 1; min-width: 420px; display: flex; }
+    #globalFilterInput { flex-grow: 1; min-width: 250px; } 
+
+    input[type="text"], input[type="number"] {
+        flex-grow: 1;
+        padding: 10px 14px; 
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 1em;
+        background: white;
+    }
+    .query-button {
+        padding: 10px 30px; 
+        border: none;
+        border-radius: 6px;
+        background: var(--accent-color);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 1em;
+    }
+    .nav-button {
+        padding: 6px 16px; 
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-color);
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    button:hover:not(:disabled) {
+        background: #0969da;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(9,105,218,0.25); 
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status-area {
+        text-align: center;
+        padding: 12px; 
+        border-radius: 8px;
+        margin-bottom: 12px; 
+        font-weight: 500;
+        border: 1px solid var(--border-color);
+        background: white;
+    }
+    .info  { background: #ddf4ff; color: #0550ae; border-color: #b6e3ff; }
+    .error { background: #ffebe9; color: #cf222e; border-color: #ff818266; }
+
+    .grid-wrapper {
+        height: auto; 
+        flex-grow: 1; 
+        min-height: 200px; 
+        border: 1px solid var(--border-color);
+        border-radius: 8px; 
+        overflow: hidden; /* 保持隐藏，Tabulator 内部会处理滚动条 */
+        box-shadow: var(--shadow);
+        background: white;
+    }
+
+    /* ==================== Tabulator 浅色高可读主题 ==================== */
+    .tabulator {
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        font-size: 14px !important; 
+    }
+    .tabulator .tabulator-header {
+        background: #f6f8fa !important;
+        color: #1f2328 !important;
+        font-weight: 600;
+        border-bottom: 2px solid var(--accent-color);
+    }
+    .tabulator .tabulator-row {
+        background: white !important;
+        border-bottom: 1px solid var(--border-color) !important;
+    }
+    .tabulator .tabulator-row:hover {
+        background: var(--hover) !important;
+    }
+    .tabulator .tabulator-cell {
+        user-select: text !important;
+        -webkit-user-select: text !important;
+        padding: 8px 10px !important; 
+        /* 保持不换行，允许内容溢出，以确保 fitDataFill 能够准确计算 */
+        white-space: nowrap; 
+        overflow: visible; 
+        text-overflow: clip; 
+    }
+
+    /* YES / NO 颜色更醒目 */
+    .tabulator .tabulator-cell span[style*="var(--green)"] { color: #2ea44f !important; font-weight: 800; }
+    .tabulator .tabulator-cell span[style*="var(--red)"]  { color: #cf222e !important; font-weight: 800; }
+
+    /* --- 统一表头过滤器高度 (包含 input, select, textarea) --- */
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input,
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter select,
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter textarea {
+        /* 强制统一高度 */
+        height: 28px !important;            
+        min-height: 28px !important;
+        padding: 3px 6px !important; 
+        line-height: 1.2 !important; 
+        font-size: 1em !important;   
+        box-sizing: border-box;      
+        border-radius: 4px;          
+        border: 1px solid var(--border-color);
+        /* 针对 textarea 的修正 */
+        resize: none !important; 
+    }
+
+    /* 确保 select 控件对齐 */
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter select {
+        appearance: none; 
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-color: var(--card-bg); 
+        padding-right: 20px !important; 
+    }
+    /* --- 统一表头过滤器高度 结束 --- */
+    
+    /* 分页美化 */
+    .tabulator .tabulator-footer {
+        background: #f6f8fa !important;
+        border-top: 1px solid var(--border-color);
+    }
+    /* 底部求和行样式 */
+    .tabulator-col-footer {
+        font-weight: bold;
+        background: #f0f3f6 !important;
+        color: var(--text-color) !important;
+    }
+    .tabulator .tabulator-page {
+        background: white !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 4px;
+        min-width: 32px;
+        padding: 4px 8px; 
+    }
+    .tabulator .tabulator-page.active {
+        background: var(--accent-color) !important;
+        color: white !important;
+        font-weight: bold;
+    }
+    .tabulator .tabulator-page:hover:not(.active) {
+        background: #f3f4f6 !important;
+    }
+
+    a {
+        color: var(--accent-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    a:hover { text-decoration: underline; }
+</style>
+    <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Polymarket 交互式分页查询器（Tabulator 版）</h1>
+
+    <div class="controls-container">
+        <div class="address-group">
+            <input type="text" id="addressInput" placeholder="输入钱包地址..."
+                    value="0x081e14554b92ee3dc53a21bd5b01f306692ef76e">
+            <button id="queryButton" class="query-button">查询</button>
+        </div>
+        
+        <input type="text" id="globalFilterInput" placeholder="搜索市场、类型或方向...">
+        
+        <div class="page-controls">
+            <label for="pageSizeInput">每页:</label>
+            <input type="number" id="pageSizeInput" value="500" min="10" max="500" step="10" style="width: 60px;">
+            <button id="prevButton" class="nav-button" disabled>上一页</button>
+            <span id="pageInfo">第 1 页</span>
+            <button id="nextButton" class="nav-button" disabled>下一页</button>
+        </div>
+    </div>
+
+    <div id="statusArea" class="status-area info">请输入钱包地址开始查询。</div>
+
+    <div id="gridWrapper" class="grid-wrapper">
+        <div id="myGrid"></div>
+    </div>
+</div>
+
+<script>
+    // 全局状态
+    const state = {
+        address: '',
+        currentPage: 1,
+        pageSize: 500,
+        isLoading: false,
+        hasMore: false,
+        username: 'UnknownUser'
+    };
+
+    // DOM
+    const els = {
+        addressInput: document.getElementById('addressInput'),
+        queryBtn:     document.getElementById('queryButton'),
+        pageSize:     document.getElementById('pageSizeInput'),
+        prevBtn:      document.getElementById('prevButton'),
+        nextBtn:      document.getElementById('nextButton'),
+        pageInfo:     document.getElementById('pageInfo'),
+        statusArea:   document.getElementById('statusArea'),
+        globalFilterInput: document.getElementById('globalFilterInput'),
+    };
+
+    // Tabulator 实例
+    let tabulator = null;
+
+    // 自定义 formatter 函数，将数字格式化为货币/数量显示
+    const moneyFormatter = (cell, formatterParams) => {
+        const val = cell.getValue();
+        if (typeof val !== 'number') return '';
+        return `$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+    };
+    const quantityFormatter = (cell, formatterParams) => {
+        const val = cell.getValue();
+        if (typeof val !== 'number') return '';
+        return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    };
+
+    // 初始化 Tabulator 
+    tabulator = new Tabulator("#myGrid", {
+        height: "100%",
+        // 关键修改：使用 fitDataFill 模式。
+        // 1. 根据内容确定最小宽度 (fitData)。
+        // 2. 将剩余空间均匀分配给各列 (Fill)，确保撑满。
+        // 3. 如果总内容宽度超过容器，将出现水平滚动条。
+        layout: "fitDataFill", 
+        placeholder: "暂无数据，请查询",
+        pagination: true,
+        paginationMode: "local", 
+        paginationSize: state.pageSize,
+        paginationSizeSelector: [10,25,50,100,200,500],
+        columns: [
+            // 所有 width 属性已移除，只保留 minWidth 进行最小尺寸约束
+            {title:"用户", field:"用户", minWidth:120, formatter:"html", headerFilter:true, headerFilterPlaceholder:"用户..."},
+            {title:"时间", field:"时间", minWidth:140, sorter:"datetime", sorterParams:{format:"YYYY-MM-DD HH:mm:ss"}},
+            {
+                title:"市场", 
+                field:"市场", 
+                minWidth:250, 
+                formatter:"html", 
+                headerFilter:true, 
+                headerFilterPlaceholder:"市场...",
+                headerFilterParams:{
+                    type:"input" 
+                }
+            },
+            {title:"类型", field:"类型", minWidth:70,  hozAlign:"center", headerFilter:true, headerFilterPlaceholder:"类型..."},
+            {title:"方向", field:"方向", minWidth:90, hozAlign:"center", formatter:"html", headerFilter:true, headerFilterPlaceholder:"方向..."},
+            {title:"价格", field:"价格", minWidth:100, hozAlign:"right", formatter:moneyFormatter, bottomCalc:"avg", bottomCalcFormatter:moneyFormatter},
+            {title:"数量", field:"数量", minWidth:110, hozAlign:"right", formatter:quantityFormatter, bottomCalc:"sum", bottomCalcFormatter:quantityFormatter},
+            {title:"价值", field:"价值", minWidth:120, hozAlign:"right", formatter:moneyFormatter, bottomCalc:"sum", bottomCalcFormatter:moneyFormatter},
+            {title:"操作", field:"链接", minWidth:80, hozAlign:"center", formatter:"html",
+                cellClick:function(e,cell){
+                    const href = cell.getValue().match(/href="([^"]+)"/);
+                    if(href) window.open(href[1], "_blank");
+                }
+            },
+        ],
+        rowFormatter:row => row.getElement().style.userSelect = "text",
+    });
+
+    // 事件
+    els.queryBtn.onclick = () => {
+        const addr = els.addressInput.value.trim();
+        if(addr){ 
+            state.address=addr; 
+            state.currentPage=1; 
+            // 清空全局过滤器
+            els.globalFilterInput.value = '';
+            tabulator.clearFilter();
+            loadPage(); 
+        }
+    };
+    
+    els.addressInput.onkeydown = e => { if(e.key==='Enter') els.queryBtn.click(); };
+    els.pageSize.onchange = () => {
+        state.pageSize = +els.pageSize.value;
+        if(state.address) { state.currentPage=1; loadPage(); }
+    };
+    els.prevBtn.onclick = () => { if(state.currentPage>1){ state.currentPage--; loadPage(); }};
+    els.nextBtn.onclick = () => { if(state.hasMore){ state.currentPage++; loadPage(); }};
+
+    // 全局搜索事件 (使用 Tabulator 的 setFilter 结合自定义函数)
+    els.globalFilterInput.addEventListener('keyup', (e) => {
+        const filterValue = e.target.value.trim();
+        if (filterValue) {
+            tabulator.setFilter(multiFieldFilter, filterValue);
+        } else {
+            tabulator.clearFilter();
+        }
+    });
+
+    // 自定义多字段模糊匹配过滤器
+    function multiFieldFilter(data, filterValue){
+        const val = filterValue.toLowerCase();
+        // 匹配市场、类型、方向字段
+        return (data.市场 && data.市场.toLowerCase().includes(val))
+            || (data.类型 && data.类型.toLowerCase().includes(val))
+            || (data.方向 && data.方向.toLowerCase().includes(val));
+    }
+
+    async function loadPage(){
+        if(state.isLoading) return;
+        state.isLoading = true;
+        
+        els.queryBtn.disabled = els.pageSize.disabled = true;
+
+        const offset = (state.currentPage-1)*state.pageSize;
+        try{
+            showStatus(`正在加载第 ${state.currentPage} 页交易记录...`, "info");
+
+            const trades = await fetch(`https://data-api.polymarket.com/trades?${new URLSearchParams({
+                user: state.address.toLowerCase(),
+                limit: state.pageSize,
+                offset,
+                takerOnly: "false"
+            })}`).then(r=>r.json());
+
+            state.hasMore = trades.length === state.pageSize;
+
+            if(trades.length===0 && state.currentPage===1){
+                showStatus(`未找到交易记录`, "info");
+                tabulator.setData([]);
+                return;
+            }
+
+            const {rows} = processTrades(trades);
+            
+            tabulator.setPageSize(state.pageSize); 
+            tabulator.setData(rows);
+
+            const from = offset+1;
+            const to   = offset + rows.length;
+            showStatus(`<b>${state.username}</b> │ 显示第 <b>${from}-${to}</b> 条`, "info");
+
+        }catch(err){
+            showStatus("查询失败："+err.message, "error");
+            tabulator.setData([]);
+        }finally{
+            state.isLoading = false;
+            els.queryBtn.disabled = els.pageSize.disabled = false;
+            els.prevBtn.disabled = state.currentPage<=1;
+            els.nextBtn.disabled = !state.hasMore;
+            els.pageInfo.textContent = `第 ${state.currentPage} 页`;
+            tabulator.redraw(true);
+        }
+    }
+
+    // 数据预处理：将价格、数量、价值解析为数字，以便 Tabulator 进行求和计算
+    function processTrades(trades){
+        const rows = trades.map(trade=>{
+            if(trade.name) state.username = trade.name;
+
+            const time = new Date(trade.timestamp*1000)
+                .toLocaleString('zh-CN',{hour12:false}).replace(/\//g,'-');
+
+            const price = parseFloat(trade.price||0);
+            const size  = parseFloat(trade.size||0);
+            const value = price*size;
+
+            let color = "var(--accent-color)";
+            if(trade.outcome.toLowerCase()==="yes") color="var(--green)";
+            if(trade.outcome.toLowerCase()==="no")  color="var(--red)";
+
+            const icon = trade.icon ? `<img src="${trade.icon}" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;border-radius:50%;">` : ''; 
+
+            return {
+                用户: icon + (trade.name||"匿名"),
+                时间: time,
+                市场: trade.title,
+                类型: trade.side.toUpperCase()==="BUY" ? "买入" : "卖出",
+                方向: `<span style="color:${color};font-weight:bold;">${trade.outcome.toUpperCase()}</span>`,
+                
+                // 关键：将价格、数量、价值作为数字传入
+                价格: price,
+                数量: size,
+                价值: value,
+                
+                链接: `<a href="https://polymarket.com/event/${trade.eventSlug}" target="_blank">打开</a>`,
+            };
+        });
+        return {rows};
+    }
+
+    function showStatus(html,type="info"){
+        els.statusArea.innerHTML = html;
+        els.statusArea.className = `status-area ${type}`;
+    }
+</script>
+</body>
+</html>
