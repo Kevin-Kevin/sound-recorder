@@ -1,12 +1,16 @@
-// wrangler.jsonc - Wrangler 核心配置文件
+
 {
-  // 【必填】Worker 项目名称（与你在 Cloudflare 上创建的 Worker 名称一致，如 my-first-worker）
   "name": "sound-recorder",
-  // 【必填】Worker 兼容日期（填写当前日期即可，格式 YYYY-MM-DD，如 2026-01-10）
-  "compatibility_date": "2026-01-08",
-  // 【必填】Worker 入口脚本路径（对应步骤 2 创建的 index.js 文件路径）
+  "compatibility_date": "2026-01-08", // 不可为未来日期
   "main": "src/index.js",
-  // 【可选】是否开启开发模式（生产环境建议关闭）
+  // 静态资产配置（核心：托管 public 中的 HTML 文件）
+  "assets": {
+    "directory": "./public", // 指向存放 HTML 的 public 目录
+    "routes": [
+      { "src": "/(.*)", "dest": "/$1" } // 匹配所有请求，转发到 public 中的文件
+    ]
+  },
+// 【可选】是否开启开发模式（生产环境建议关闭）
   "dev": false,
   // 【可选】绑定的自定义域名（若有，可后续添加）
   "routes": []
