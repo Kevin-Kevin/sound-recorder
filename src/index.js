@@ -7,7 +7,7 @@ export default {
       return staticResponse;
     } catch (err) {
       // 第二步：静态文件不存在时，返回自定义 404（可选扩展）
-      return new Response('静态页面不存在！', {
+      return new Response('静态页面不存在!！', {
         status: 404,
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },
       });
