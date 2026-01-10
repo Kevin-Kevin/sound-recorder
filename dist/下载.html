@@ -81,10 +81,19 @@
     <h1>文件下载</h1>
     
     <div class="filename">下载本网页</div>
-    <a href="./下载.html" class="btn" download>
-      下载文件
-    </a>
 
+    <button class="btn" onclick="downloadFile()">下载文件</button>
+
+    <script>
+    function downloadFile() {
+        const link = document.createElement('a');
+        link.href = './下载.html';
+        link.download = '下载.html';  // 直接指定完整中文名
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    </script>
     <div class="info">
       文件会在点击后自动开始下载<br>
       如下载未开始请右键 →「另存为」
