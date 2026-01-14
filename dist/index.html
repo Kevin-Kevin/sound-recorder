@@ -2,117 +2,186 @@
 <html lang="zh-CN">
 
 <head>
-  <meta charset="UTF-8">
-  <title>页面导航（键值对形式）</title>
-  <style>
-    /* 简单样式，让键值对和按钮更美观 */
-    body {
-      max-width: 800px;
-      margin: 50px auto;
-      font-family: Arial, sans-serif;
-      background-color: #f5f7fa;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面导航 Pro Max</title>
+    <style>
+        :root {
+            --mac-bg: #f5f5f7;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --primary-accent: #007AFF;
+            --text-main: #1d1d1f;
+            --text-sub: #86868b;
+        }
 
-    .nav-container {
-      padding: 30px;
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
+        body {
+            margin: 0;
+            padding: 20px; /* 移动端的基础左右间距 */
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+            background-color: var(--mac-bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
 
-    h1 {
-      color: #2c3e50;
-      text-align: center;
-      margin-bottom: 30px;
-    }
+        .nav-container {
+            width: 100%;
+            max-width: 700px;
+            margin-top: 40px;
+        }
 
-    /* 键值对列表样式 */
-    .kv-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
 
-    .kv-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 15px 20px;
-      margin: 10px 0;
-      background-color: #f8f9fa;
-      border-radius: 6px;
-    }
+        .kv-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-    /* 键（页面名称） */
-    .kv-key {
-      font-size: 18px;
-      color: #2c3e50;
-      font-weight: 500;
-    }
+        /* 键值对卡片基础样式 */
+        .kv-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
 
-    /* 值（跳转按钮） */
-    .kv-value {
-      display: flex;
-      gap: 10px;
-    }
+        .kv-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+        }
 
-    .jump-btn {
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      text-decoration: none;
-      /* 去除链接下划线 */
-    }
+        .kv-key {
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
 
-    .jump-btn:hover {
-      background-color: #0056b3;
-    }
-  </style>
+        .kv-value {
+            display: flex;
+            align-items: center;
+        }
+
+        /* 按钮样式 */
+        .jump-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 18px;
+            background-color: var(--primary-accent);
+            color: white;
+            border: none;
+            border-radius: 20px; /* 药丸型按钮 */
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .jump-btn:hover {
+            opacity: 0.9;
+        }
+
+        .jump-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 针对移动端的特殊适配 */
+        @media (max-width: 600px) {
+            body {
+                padding: 15px; /* 手机端外边距微调 */
+            }
+
+            h1 {
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+
+            .kv-item {
+                flex-direction: column; /* 垂直排列 */
+                align-items: flex-start; /* 左对齐 */
+                padding: 18px;
+                gap: 14px;
+            }
+
+            .kv-value {
+                width: 100%; /* 按钮容器撑满 */
+            }
+
+            .jump-btn {
+                width: 100%; /* 按钮在手机上全宽，更好按 */
+                padding: 12px 0;
+                font-size: 15px;
+            }
+            
+            .kv-key {
+                font-size: 16px;
+                padding-left: 4px;
+                border-left: 3px solid var(--primary-accent); /* 手机端加个装饰线更好看 */
+            }
+        }
+    </style>
 </head>
 
 <body>
-  <div class="nav-container">
-    <h1>📂 页面导航（键值对形式）</h1>
-    <ul class="kv-list">
-      <!-- 核心键值对：键=录音功能页面，值=跳转按钮（指向 record.html） -->
-      <li class="kv-item">
-        <div class="kv-key">录音功能页面</div>
-        <div class="kv-value">
-          <!-- 按钮形式跳转（a 标签模拟按钮，点击进入 record.html） -->
-          <a href="sound-recorder.html" class="jump-btn">点击进入</a>
-        </div>
-      </li>
-      <li class="kv-item">
-        <div class="kv-key">polymarket交易记录</div>
-        <div class="kv-value">
-          <a href="trade-record-query.html" class="jump-btn" disabled>点击进入</a>
-        </div>
-      </li>
-      <li class="kv-item">
-        <div class="kv-key">下载</div>
-        <div class="kv-value">
-          <a href="download.html" class="jump-btn" disabled>点击进入</a>
-        </div>
-      </li>
-      <li class="kv-item">
-        <div class="kv-key">时钟</div>
-        <div class="kv-value">
-          <a href="clock.html" class="jump-btn" disabled>点击进入</a>
-        </div>
-      </li>
-      <!-- 可新增更多键值对导航项，只需复制上面的 li 即可 -->
-      <li class="kv-item">
-        <div class="kv-key">预留页面（示例）</div>
-        <div class="kv-value">
-          <a href="#" class="jump-btn" disabled>暂未开放</a>
-        </div>
-      </li>
-    </ul>
-  </div>
+    <div class="nav-container">
+        <h1>📂 页面导航</h1>
+        
+        <ul class="kv-list">
+            <li class="kv-item">
+                <div class="kv-key">录音功能页面</div>
+                <div class="kv-value">
+                    <a href="sound-recorder.html" class="jump-btn">点击进入</a>
+                </div>
+            </li>
+
+            <li class="kv-item">
+                <div class="kv-key">Polymarket 交易记录</div>
+                <div class="kv-value">
+                    <a href="trade-record-query.html" class="jump-btn">点击进入</a>
+                </div>
+            </li>
+
+            <li class="kv-item">
+                <div class="kv-key">文件下载中心</div>
+                <div class="kv-value">
+                    <a href="download.html" class="jump-btn">点击进入</a>
+                </div>
+            </li>
+
+            <li class="kv-item">
+                <div class="kv-key">macOS 极简时钟</div>
+                <div class="kv-value">
+                    <a href="clock.html" class="jump-btn">点击进入</a>
+                </div>
+            </li>
+
+            <li class="kv-item">
+                <div class="kv-key">更多功能开发中...</div>
+                <div class="kv-value">
+                    <a href="#" class="jump-btn" style="background: #e5e5e7; color: #a1a1a6; pointer-events: none;">敬请期待</a>
+                </div>
+            </li>
+        </ul>
+    </div>
 </body>
 
 </html>
