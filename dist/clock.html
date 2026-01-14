@@ -217,8 +217,8 @@
         <div id="clock-section" class="content">
             <div class="display-wrapper">
                 <div id="current-date" class="date-info"></div>
-                <div id="location-name" class="location-info"></div>
                 <div id="lunar-date" class="lunar-info"></div>
+                <div id="location-name" class="location-info"></div>
                 <div class="display">
                     <span id="c-h">00</span><span class="colon">:</span><span id="c-m">00</span><span class="colon">:</span><span id="c-s">00</span>
                 </div>
@@ -300,9 +300,10 @@
             document.getElementById('current-date').textContent = now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
         }
 
-        function getLunarAndLocation() {
+   function getLunarAndLocation() {
             const now = new Date();
             try {
+                // 农历逻辑保持不变
                 const parts = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', { calendar: 'chinese', month: 'long', day: 'numeric' }).formatToParts(now);
                 let m = '', dRaw = '';
                 parts.forEach(p => { 
@@ -310,10 +311,23 @@
                     if (p.type === 'day') dRaw = p.value; 
                 });
                 document.getElementById('lunar-date').textContent = `农历${m}${toLunarDay(dRaw)}`;
-                document.getElementById('location-name').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' ');
+
+                // --- 修复并格式化时区显示 ---
+                const options = { timeZoneName: 'shortOffset' };
+                const tzParts = new Intl.DateTimeFormat('zh-CN', options).formatToParts(now);
+                const gmtOffset = tzParts.find(p => p.type === 'timeZoneName').value; // 获取 GMT+9
+                
+                // 获取城市名称（如：东京）
+                const timeZoneRaw = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const city = timeZoneRaw.split('/').pop().replace('_', ' ');
+                
+                // 拼接最终格式：时区：亚洲东京 (GMT+9) 
+                // 注：由于浏览器限制，获取“东京都”这种详细行政区划较难，通常显示为城市名
+                document.getElementById('location-name').textContent = `${city} (${gmtOffset})`;
+                // -----------------------
+
             } catch (e) { console.error(e); }
         }
-
         function toLunarDay(d) {
             const numArr = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
             const dInt = parseInt(d);
