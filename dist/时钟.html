@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOS Clock Pro Max</title>
+    <style>
+        :root {
+            --mac-bg-gradient: linear-gradient(135deg, #e5e5e7 0%, #ffffff 100%);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.9);
+            --text-main: #1d1d1f;
+            --text-sub: #86868b;
+            --mac-accent: #007AFF;
+            --mac-danger: #FF3B30;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+            background: var(--mac-bg-gradient);
+            height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* 核心窗口容器 */
+        .window {
+            width: 800px; 
+            min-height: 500px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.5s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- 全屏适配：修复按钮点击失效 --- */
+        .window:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            background: #f5f5f7;
+            justify-content: flex-start; /* 从顶部开始排版，确保标题栏位置固定 */
+        }
+
+        .window:fullscreen .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transform: scale(1.4); /* 全屏时内容放大 */
+        }
+
+        /* 最小化状态 */
+        .window.minimized {
+            transform: scale(0) translateY(800px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 标题栏：确保在全屏时层级最高 */
+        .title-bar {
+            height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex; align-items: center;
+            padding: 0 25px; gap: 12px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 9999; /* 极高层级防止遮挡 */
+        }
+
+        .dot { 
+            width: 15px; height: 15px; border-radius: 50%; 
+            cursor: pointer; position: relative; border: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .dot::after {
+            content: ''; font-size: 10px; font-weight: bold; opacity: 0; transition: 0.2s;
+        }
+        .title-bar:hover .dot::after { opacity: 0.5; }
+        
+        .red { background: #FF5F56; } .red::after { content: '×'; }
+        .yellow { background: #FFBD2E; } .yellow::after { content: '−'; }
+        .green { background: #27C93F; } .green::after { content: '⤢'; }
+
+        /* 标签页 */
+        .tabs { 
+            display: flex; justify-content: center; gap: 40px; 
+            padding: 20px 0; border-bottom: 1px solid rgba(0,0,0,0.05); 
+            position: relative; z-index: 999;
+        }
+        .tab-btn { 
+            background: none; border: none; color: var(--text-sub); 
+            cursor: pointer; font-size: 20px; font-weight: 500; 
+            padding: 10px 20px; border-radius: 12px; transition: 0.3s; 
+        }
+        .tab-btn:hover { background: rgba(0,0,0,0.03); }
+        .tab-btn.active { color: var(--mac-accent); background: rgba(0, 122, 255, 0.1); }
+
+        /* 内容区 */
+        .content { 
+            flex: 1; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
+            padding: 60px; text-align: center;
+            transition: transform 0.4s ease;
+        }
+
+        .display { 
+            font-size: 120px; 
+            font-weight: 200; margin-bottom: 40px; 
+            letter-spacing: -4px; font-variant-numeric: tabular-nums; 
+        }
+        .date-display { font-size: 28px; color: var(--text-sub); margin-bottom: 15px; }
+
+        .controls { display: flex; justify-content: center; gap: 25px; }
+        button.action-btn { 
+            background: white; border: 1px solid rgba(0,0,0,0.1); 
+            color: var(--text-main); padding: 15px 45px; border-radius: 15px; 
+            cursor: pointer; font-size: 18px; font-weight: 500; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: all 0.2s; 
+        }
+        button.action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        button.primary { background: var(--mac-accent); color: white; border: none; }
+        
+        .timer-inputs { margin-bottom: 40px; display: flex; align-items: center; gap: 15px; }
+        input[type="number"] { 
+            background: white; border: 1px solid rgba(0,0,0,0.1); 
+            width: 100px; padding: 15px; border-radius: 15px; 
+            text-align: center; font-size: 32px; outline: none; 
+        }
+        
+        .hidden { display: none !important; }
+        .ms { font-size: 50px; color: var(--text-sub); margin-left: 5px; }
+
+        #restore-btn {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--mac-accent); color: white; border: none;
+            padding: 15px 30px; border-radius: 15px; cursor: pointer;
+            display: none; box-shadow: 0 10px 25px rgba(0,122,255,0.4);
+            font-size: 16px; font-weight: 600; z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="window" id="main-window">
+    <div class="title-bar">
+        <button class="dot red" onclick="closeWindow()"></button>
+        <button class="dot yellow" onclick="minimizeWindow()"></button>
+        <button class="dot green" onclick="toggleWindowFullScreen()"></button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('clock', event)">时钟</button>
+        <button class="tab-btn" onclick="showTab('stopwatch', event)">秒表</button>
+        <button class="tab-btn" onclick="showTab('timer', event)">计时器</button>
+    </div>
+
+    <div id="clock-section" class="content">
+        <div id="current-date" class="date-display"></div>
+        <div class="display" id="clock-display">00:00:00</div>
+    </div>
+
+    <div id="stopwatch-section" class="content hidden">
+        <div class="display" id="stopwatch-main">00:00<span class="ms">.00</span></div>
+        <div class="controls">
+            <button class="action-btn primary" id="sw-start" onclick="toggleStopwatch()">开始</button>
+            <button class="action-btn" onclick="resetStopwatch()">重置</button>
+        </div>
+    </div>
+
+    <div id="timer-section" class="content hidden">
+        <div id="timer-input-group" class="timer-inputs">
+            <input type="number" id="timer-min" placeholder="00">
+            <span style="font-size: 32px; font-weight: bold;">:</span>
+            <input type="number" id="timer-sec" placeholder="00">
+        </div>
+        <div class="display hidden" id="timer-display">00:00</div>
+        <div class="controls">
+            <button class="action-btn primary" id="tm-start" onclick="toggleTimer()">开始</button>
+            <button class="action-btn" onclick="resetTimer()">取消</button>
+        </div>
+    </div>
+</div>
+
+<button id="restore-btn" onclick="restoreWindow()">恢复显示</button>
+
+<script>
+    const win = document.getElementById('main-window');
+    const restoreBtn = document.getElementById('restore-btn');
+
+    // --- 全屏逻辑：支持双向切换 ---
+    function toggleWindowFullScreen() {
+        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+        
+        if (!isFullscreen) {
+            if (win.requestFullscreen) {
+                win.requestFullscreen();
+            } else if (win.webkitRequestFullscreen) {
+                win.webkitRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+    }
+
+    // --- 窗口操作 ---
+    function minimizeWindow() {
+        win.classList.add('minimized');
+        setTimeout(() => { restoreBtn.style.display = 'block'; }, 400);
+    }
+
+    function restoreWindow() {
+        win.classList.remove('minimized');
+        restoreBtn.style.display = 'none';
+    }
+
+    function closeWindow() {
+        if(confirm("确定要关闭时钟应用吗？计时将停止。")) {
+            win.style.opacity = '0';
+            setTimeout(() => win.style.display = 'none', 500);
+        }
+    }
+
+    // --- 业务逻辑 ---
+    function showTab(tab, event) {
+        document.querySelectorAll('.content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(`${tab}-section`).classList.remove('hidden');
+        if(event) event.currentTarget.classList.add('active');
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock-display').textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
+        document.getElementById('current-date').textContent = now.toLocaleDateString('zh-CN', { 
+            year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' 
+        });
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    let swInterval, swRunning = false, swTime = 0;
+    function toggleStopwatch() {
+        const btn = document.getElementById('sw-start');
+        if (!swRunning) {
+            swRunning = true; btn.textContent = '停止'; btn.style.background = 'var(--mac-danger)';
+            const startTime = Date.now() - swTime;
+            swInterval = setInterval(() => {
+                swTime = Date.now() - startTime;
+                const ms = Math.floor((swTime % 1000) / 10), sec = Math.floor((swTime / 1000) % 60), min = Math.floor(swTime / 60000);
+                document.getElementById('stopwatch-main').innerHTML = 
+                    `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}<span class="ms">.${String(ms).padStart(2, '0')}</span>`;
+            }, 10);
+        } else {
+            swRunning = false; btn.textContent = '开始'; btn.style.background = 'var(--mac-accent)'; clearInterval(swInterval);
+        }
+    }
+    function resetStopwatch() {
+        clearInterval(swInterval); swRunning = false; swTime = 0;
+        document.getElementById('stopwatch-main').innerHTML = `00:00<span class="ms">.00</span>`;
+        document.getElementById('sw-start').textContent = '开始';
+        document.getElementById('sw-start').style.background = 'var(--mac-accent)';
+    }
+
+    let tmInterval, tmRunning = false, tmTotalSeconds = 0;
+    function toggleTimer() {
+        const btn = document.getElementById('tm-start'), inputGrp = document.getElementById('timer-input-group'), display = document.getElementById('timer-display');
+        if (!tmRunning) {
+            if (tmTotalSeconds <= 0) {
+                tmTotalSeconds = (parseInt(document.getElementById('timer-min').value) || 0) * 60 + (parseInt(document.getElementById('timer-sec').value) || 0);
+            }
+            if (tmTotalSeconds <= 0) return;
+            tmRunning = true; btn.textContent = '暂停'; inputGrp.classList.add('hidden'); display.classList.remove('hidden');
+            tmInterval = setInterval(() => {
+                tmTotalSeconds--;
+                display.textContent = `${String(Math.floor(tmTotalSeconds / 60)).padStart(2, '0')}:${String(tmTotalSeconds % 60).padStart(2, '0')}`;
+                if (tmTotalSeconds <= 0) { clearInterval(tmInterval); alert("时间到！"); resetTimer(); }
+            }, 1000);
+        } else {
+            tmRunning = false; btn.textContent = '继续'; clearInterval(tmInterval);
+        }
+    }
+    function resetTimer() {
+        clearInterval(tmInterval); tmRunning = false; tmTotalSeconds = 0;
+        document.getElementById('tm-start').textContent = '开始';
+        document.getElementById('timer-input-group').classList.remove('hidden');
+        document.getElementById('timer-display').classList.add('hidden');
+    }
+</script>
+
+</body>
+</html>
