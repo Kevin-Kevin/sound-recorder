@@ -4,15 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <!-- 优化移动端状态栏颜色 -->
     <meta name="theme-color" content="#e5e5e7">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>macOS Clock Pro Max</title>
     <style>
         :root {
-            --mac-bg-gradient: linear-gradient(135deg, #e5e5e7 0%, #f4f4f6 100%);
+            --mac-bg-start: #e5e5e7;
+            --mac-bg-gradient: linear-gradient(135deg, var(--mac-bg-start) 0%, #f4f4f6 100%);
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.8);
             --text-main: #1d1d1f;
@@ -20,18 +20,28 @@
             --mac-accent: #007AFF;
         }
 
+        /* 解决 Safari 100vh 问题 */
+        html {
+            height: -webkit-fill-available;
+            height: 100%;
+        }
+
         body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
             height: 100vh;
+            height: -webkit-fill-available;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
-            /* 修改背景色为与渐变层一致，避免状态栏或边缘出现黑色 */
-            background: #e5e5e7;
+            background-color: var(--mac-bg-start);
+            box-sizing: border-box;
+            /* 安全区域适配 */
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         .bg-layer {
@@ -41,14 +51,16 @@
             width: 100%;
             height: 100%;
             background: var(--mac-bg-gradient);
-            background-attachment: fixed;
-            background-size: cover;
             z-index: -1;
+            /* 适配安全区域 */
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         .window {
             width: 720px;
             height: 560px;
+            max-width: 95vw;
+            max-height: 85vh;
             background: var(--glass-bg);
             backdrop-filter: blur(40px) saturate(200%);
             -webkit-backdrop-filter: blur(40px) saturate(200%);
@@ -58,122 +70,122 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.3s ease, border-radius 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
             position: relative;
             z-index: 1;
         }
 
-        .window:fullscreen { 
-            width: 100vw !important; 
-            height: 100vh !important; 
-            border-radius: 0; 
+        .window.is-fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            max-height: none !important;
+            border-radius: 0;
             border: none;
-            background: rgba(240, 240, 242, 0.4) !important; 
             box-shadow: none;
+            /* 全屏时也适配安全区域 */
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            box-sizing: border-box;
         }
 
         .window.minimized { transform: scale(0.2) translateY(1000px); opacity: 0; pointer-events: none; }
 
-        .title-bar { height: 50px; display: flex; align-items: center; padding: 0 20px; gap: 8px; flex-shrink: 0; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .title-bar { 
+            height: 50px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 20px; 
+            gap: 8px; 
+            flex-shrink: 0; 
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; }
         .red { background-color: #FF5F56; border: 0.5px solid #E0443E; }
         .yellow { background-color: #FFBD2E; border: 0.5px solid #DEA123; }
         .green { background-color: #27C93F; border: 0.5px solid #1AAB29; }
 
-        .tabs { display: flex; justify-content: center; gap: 30px; padding: 15px 0; border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
-        .tab-btn { background: none; border: none; color: var(--text-sub); cursor: pointer; font-size: 16px; font-weight: 500; padding: 8px 16px; border-radius: 8px; transition: 0.2s; }
+        .tabs { display: flex; justify-content: center; gap: 20px; padding: 10px 0; border-bottom: 1px solid rgba(0, 0, 0, 0.05); flex-shrink: 0; }
+        .tab-btn { background: none; border: none; color: var(--text-sub); cursor: pointer; font-size: 15px; font-weight: 500; padding: 8px 16px; border-radius: 8px; transition: 0.2s; }
         .tab-btn.active { color: var(--mac-accent); background: rgba(0, 122, 255, 0.1); }
 
         .content { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden; }
         .display-wrapper { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 0; }
-        .date-info { font-size: 32px; color: var(--text-main); font-weight: 700; margin: 0 0 6px 0; }
-        .lunar-info, .location-info { font-size: 14px; color: var(--text-sub); margin: 1px 0; }
+        .date-info { font-size: 28px; color: var(--text-main); font-weight: 700; margin-bottom: 4px; }
+        .lunar-info, .location-info { font-size: 13px; color: var(--text-sub); margin: 1px 0; }
 
-        .display { font-size: 90px; font-weight: 200; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-variant-numeric: tabular-nums; line-height: 1; margin: 25px 0; }
-        .colon { margin: 0 12px; padding-bottom: 12px; font-weight: 100; opacity: 0.8; }
+        .display { font-size: 80px; font-weight: 200; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-variant-numeric: tabular-nums; line-height: 1; margin: 20px 0; }
+        .colon { margin: 0 10px; padding-bottom: 8px; font-weight: 100; opacity: 0.8; }
         .ms-style { color: var(--text-sub); font-weight: 200; }
-        .dot-ms { margin: 0 5px; padding-bottom: 8px; color: var(--text-sub); }
+        .dot-ms { margin: 0 4px; padding-bottom: 6px; color: var(--text-sub); }
 
-        .controls { height: 80px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-shrink: 0; }
-        button.action-btn { background: white; border: 1px solid rgba(0, 0, 0, 0.1); padding: 10px 30px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 500; transition: 0.2s; min-width: 100px; }
-        button.primary { background: var(--mac-accent); color: white; border: none; }
-        
-        button.action-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            background: rgba(0, 0, 0, 0.05);
-            color: var(--text-sub);
+        .controls { 
+            height: 80px;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 15px; 
+            flex-shrink: 0; 
+            padding-bottom: 10px;
         }
+
+        button.action-btn { background: white; border: 1px solid rgba(0, 0, 0, 0.1); padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 600; transition: 0.2s; min-width: 90px; }
+        button.primary { background: var(--mac-accent); color: white; border: none; }
+        button.action-btn:active { transform: scale(0.96); }
+        button.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .hidden { display: none !important; }
 
-        .laps-container {
-            width: 100%;
-            max-width: 440px;
-            flex: 1;
-            overflow-y: auto;
-            margin-top: 10px;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            scrollbar-width: none;
-        }
-        .laps-container::-webkit-scrollbar { display: none; }
-        
-        .lap-header {
-            position: sticky;
-            top: 0;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 15px;
-            font-size: 12px;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            font-weight: 600;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            z-index: 10;
-        }
+        .laps-container { width: 100%; max-width: 440px; flex: 1; overflow-y: auto; margin-top: 10px; border-top: 1px solid rgba(0, 0, 0, 0.05); }
+        .lap-item { display: flex; justify-content: space-between; padding: 12px 15px; font-size: 14px; color: var(--text-main); border-bottom: 1px solid rgba(0, 0, 0, 0.02); }
 
-        .lap-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 15px;
-            font-size: 14px;
-            color: var(--text-main);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.02);
-        }
-
-        .picker-container { display: flex; align-items: center; justify-content: center; gap: 5px; height: 250px; position: relative; }
-        .column-group { position: relative; width: 90px; height: 250px; display: flex; align-items: center; justify-content: center; }
+        .picker-container { display: flex; align-items: center; justify-content: center; gap: 5px; height: 220px; position: relative; }
+        .column-group { position: relative; width: 80px; height: 220px; display: flex; align-items: center; justify-content: center; }
         .picker-column {
-            width: 70px;
-            height: 250px;
+            width: 100%;
+            height: 100%;
             overflow-y: auto;
-            scroll-snap-type: none; 
+            scroll-snap-type: y mandatory;
             scrollbar-width: none;
-            padding: 100px 0;
+            padding: 85px 0;
             box-sizing: border-box;
             mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
         }
         .picker-column::-webkit-scrollbar { display: none; }
-        .picker-item {
-            height: 50px;
-            line-height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: rgba(0, 0, 0, 0.15);
-            pointer-events: none;
+        .picker-item { height: 50px; line-height: 50px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: rgba(0, 0, 0, 0.2); scroll-snap-align: center; }
+        .picker-item.selected { color: var(--mac-accent); font-weight: 700; font-size: 32px; }
+        .static-unit { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: var(--mac-accent); pointer-events: none; }
+        .picker-highlight { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 50px; background: rgba(0, 0, 0, 0.04); border-radius: 10px; pointer-events: none; }
+
+        /* iPad特定适配 */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .window.is-fullscreen {
+                height: 100vh !important;
+                min-height: -webkit-fill-available;
+            }
+            
+            body {
+                min-height: -webkit-fill-available;
+            }
         }
-        .picker-item.selected { color: var(--mac-accent); font-weight: 600; font-size: 40px; }
-        .static-unit { position: absolute; right: 0px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 600; color: var(--mac-accent); padding-top: 6px; }
-        .picker-highlight { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; height: 50px; background: rgba(0, 0, 0, 0.04); border-radius: 10px; pointer-events: none; }
+
+        /* 横屏模式优化 */
+        @media (orientation: landscape) {
+            .window.is-fullscreen {
+                padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            }
+        }
 
         @media (max-width: 768px) {
-            .window { width: calc(100% - 40px); height: 80vh; }
-            .display { font-size: 56px; }
+            .window { 
+                width: 92vw; 
+                height: 70vh;
+            }
+            .display { font-size: 54px; }
+            .date-info { font-size: 22px; }
+            .tabs { gap: 5px; }
+            .tab-btn { padding: 8px 10px; font-size: 14px; }
         }
     </style>
 </head>
@@ -182,10 +194,11 @@
     <div class="bg-layer"></div>
 
     <div class="window" id="app-window" onclick="event.stopPropagation()">
+        <!-- 标题栏 -->
         <div class="title-bar">
             <div class="dot red" onclick="closeApp()"></div>
             <div class="dot yellow" onclick="minimizeApp()"></div>
-            <div class="dot green" onclick="maximizeApp()"></div>
+            <div class="dot green" onclick="toggleFull()"></div>
         </div>
 
         <div class="tabs">
@@ -194,6 +207,7 @@
             <button class="tab-btn" onclick="showTab('timer', event)">计时器</button>
         </div>
 
+        <!-- 时钟 -->
         <div id="clock-section" class="content">
             <div class="display-wrapper">
                 <div id="current-date" class="date-info"></div>
@@ -206,19 +220,13 @@
             <div class="controls"></div>
         </div>
 
+        <!-- 秒表 -->
         <div id="stopwatch-section" class="content hidden">
             <div class="display-wrapper">
                 <div class="display">
                     <span id="sw-min">00</span><span class="colon">:</span><span id="sw-sec">00</span><span class="dot-ms">.</span><span id="sw-ms" class="ms-style">00</span>
                 </div>
                 <div id="sw-laps-wrapper" class="laps-container hidden">
-                    <div class="lap-header">
-                        <span>计次</span>
-                        <div style="display: flex; gap: 30px;">
-                            <span style="min-width: 80px; text-align: right;">分段</span>
-                            <span style="min-width: 80px; text-align: right;">总计</span>
-                        </div>
-                    </div>
                     <div id="sw-laps-list"></div>
                 </div>
             </div>
@@ -228,19 +236,14 @@
             </div>
         </div>
 
+        <!-- 计时器 -->
         <div id="timer-section" class="content hidden">
             <div class="display-wrapper">
                 <div id="timer-picker-group" class="picker-container">
                     <div class="picker-highlight"></div>
-                    <div class="column-group">
-                        <div class="picker-column" id="p-hour"></div><span class="static-unit">时</span>
-                    </div>
-                    <div class="column-group">
-                        <div class="picker-column" id="p-min"></div><span class="static-unit">分</span>
-                    </div>
-                    <div class="column-group">
-                        <div class="picker-column" id="p-sec"></div><span class="static-unit">秒</span>
-                    </div>
+                    <div class="column-group"><div class="picker-column" id="p-hour"></div><span class="static-unit">时</span></div>
+                    <div class="column-group"><div class="picker-column" id="p-min"></div><span class="static-unit">分</span></div>
+                    <div class="column-group"><div class="picker-column" id="p-sec"></div><span class="static-unit">秒</span></div>
                 </div>
                 <div class="display hidden" id="timer-display">
                     <span id="tm-h">00</span><span class="colon">:</span><span id="tm-m">00</span><span class="colon">:</span><span id="tm-s">00</span>
@@ -259,15 +262,59 @@
         function closeApp() { appWindow.style.opacity = '0'; }
         function minimizeApp() { appWindow.classList.add('minimized'); }
         function restoreWindow() { appWindow.classList.remove('minimized'); }
-        function maximizeApp() {
+        
+        function toggleFull() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
             if (!document.fullscreenElement) {
-                appWindow.requestFullscreen().catch(err => {
-                    console.log(`Error attempting to enable full-screen mode: ${err.message}`);
-                });
+                // iOS设备特殊处理[1,8](@ref)
+                if (isIOS) {
+                    appWindow.classList.add('is-fullscreen');
+                    // 强制横屏体验
+                    document.body.style.width = '100vw';
+                    document.body.style.height = '100vh';
+                } else {
+                    const requestFull = document.documentElement.requestFullscreen || 
+                                       document.documentElement.webkitRequestFullscreen;
+                    
+                    if (requestFull) {
+                        requestFull.call(document.documentElement).then(() => {
+                            appWindow.classList.add('is-fullscreen');
+                        }).catch(err => {
+                            // 降级方案[8](@ref)
+                            appWindow.classList.add('is-fullscreen');
+                        });
+                    }
+                }
             } else {
-                document.exitFullscreen();
+                const exitFull = document.exitFullscreen || 
+                                document.webkitExitFullscreen;
+                
+                if (exitFull) {
+                    exitFull.call(document).then(() => {
+                        appWindow.classList.remove('is-fullscreen');
+                        if (isIOS) {
+                            document.body.style.width = '';
+                            document.body.style.height = '';
+                        }
+                    });
+                }
             }
         }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) appWindow.classList.remove('is-fullscreen');
+            else appWindow.classList.add('is-fullscreen');
+        });
+
+        // 监听横竖屏变化[6](@ref)
+        window.addEventListener('resize', function() {
+            if (document.fullscreenElement || appWindow.classList.contains('is-fullscreen')) {
+                // 全屏状态下，重新计算布局
+                appWindow.style.height = '100vh';
+                appWindow.style.width = '100vw';
+            }
+        });
 
         function toLunarDay(d) {
             const numArr = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
@@ -277,8 +324,7 @@
             if (dInt < 20) return "十" + numArr[dInt % 10];
             if (dInt === 20) return "二十";
             if (dInt < 30) return "廿" + numArr[dInt % 10];
-            if (dInt === 30) return "三十";
-            return d;
+            return dInt === 30 ? "三十" : d;
         }
 
         function updateClock() {
@@ -303,6 +349,7 @@
             } catch (e) { console.error(e); }
         }
 
+        // 秒表逻辑
         let swInterval, swRunning = false, swTime = 0, lastLapTime = 0, laps = [];
         function formatTime(ms) {
             const m = String(Math.floor(ms / 60000)).padStart(2, '0');
@@ -361,17 +408,13 @@
                 list.innerHTML = laps.map(l => `
                     <div class="lap-item">
                         <span>计次 ${l.id}</span>
-                        <div style="display:flex; gap:30px;">
-                            <span style="min-width:80px;text-align:right;">${formatTime(l.lap)}</span>
-                            <span style="min-width:80px;text-align:right;">${formatTime(l.total)}</span>
-                        </div>
+                        <span>+${formatTime(l.lap)} &nbsp;&nbsp; ${formatTime(l.total)}</span>
                     </div>
                 `).join('');
-            } else { 
-                wrapper.classList.add('hidden'); 
-            }
+            } else { wrapper.classList.add('hidden'); }
         }
 
+        // 计时器逻辑
         function initPickers() {
             const createItems = (id, count) => {
                 const col = document.getElementById(id);
@@ -409,20 +452,16 @@
                 
                 if (tmTotalSeconds <= 0) return;
 
-                updateTimerDisplay();
-
                 tmRunning = true; 
                 btn.textContent = '暂停';
                 document.getElementById('timer-picker-group').classList.add('hidden');
                 document.getElementById('timer-display').classList.remove('hidden');
+                
+                updateTimerDisplay();
 
                 tmInterval = setInterval(() => {
-                    if (tmTotalSeconds <= 0) { 
-                        clearInterval(tmInterval); 
-                        resetTimer(); 
-                        return; 
-                    }
-                    tmTotalSeconds--;
+                    if (tmTotalSeconds <= 0) { resetTimer(); return; }
+                    tmTotalSeconds--; 
                     updateTimerDisplay();
                 }, 1000);
             } else { 
@@ -446,7 +485,9 @@
             event.currentTarget.classList.add('active');
         }
 
-        window.onload = () => { initPickers(); updateClock(); getLunarAndLocation(); setInterval(updateClock, 1000); };
+        window.onload = () => { 
+            initPickers(); updateClock(); getLunarAndLocation(); setInterval(updateClock, 1000); 
+        };
     </script>
 </body>
 </html>
