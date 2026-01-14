@@ -3,11 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- 优化移动端状态栏颜色 -->
+    <meta name="theme-color" content="#e5e5e7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
     <title>macOS Clock Pro Max</title>
     <style>
         :root {
-            --mac-bg-gradient: linear-gradient(135deg, #e5e5e7 0%, #f2f2f3 100%);
+            --mac-bg-gradient: linear-gradient(135deg, #e5e5e7 0%, #f4f4f6 100%);
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.8);
             --text-main: #1d1d1f;
@@ -25,7 +30,8 @@
             align-items: center;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
-            background: #111;
+            /* 修改背景色为与渐变层一致，避免状态栏或边缘出现黑色 */
+            background: #e5e5e7;
         }
 
         .bg-layer {
@@ -64,10 +70,6 @@
             border: none;
             background: rgba(240, 240, 242, 0.4) !important; 
             box-shadow: none;
-        }
-
-        .window:fullscreen::backdrop {
-            background: var(--mac-bg-gradient);
         }
 
         .window.minimized { transform: scale(0.2) translateY(1000px); opacity: 0; pointer-events: none; }
@@ -398,7 +400,6 @@
         function toggleTimer() {
             const btn = document.getElementById('tm-start');
             if (!tmRunning) {
-                // 如果是新开始计时（之前没在运行且剩余时间为0），则从选择器获取时间
                 if (tmTotalSeconds <= 0) {
                     const h = Math.round(document.getElementById('p-hour').scrollTop / 50);
                     const m = Math.round(document.getElementById('p-min').scrollTop / 50);
@@ -408,7 +409,6 @@
                 
                 if (tmTotalSeconds <= 0) return;
 
-                // 立即更新一次显示，防止出现全 0 的瞬间
                 updateTimerDisplay();
 
                 tmRunning = true; 
