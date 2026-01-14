@@ -40,7 +40,6 @@
             -webkit-tap-highlight-color: transparent;
             background-color: var(--mac-bg-start);
             box-sizing: border-box;
-            /* 安全区域适配 */
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
@@ -52,8 +51,6 @@
             height: 100%;
             background: var(--mac-bg-gradient);
             z-index: -1;
-            /* 适配安全区域 */
-            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         .window {
@@ -83,7 +80,6 @@
             border-radius: 0;
             border: none;
             box-shadow: none;
-            /* 全屏时也适配安全区域 */
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
             box-sizing: border-box;
         }
@@ -136,8 +132,42 @@
 
         .hidden { display: none !important; }
 
-        .laps-container { width: 100%; max-width: 440px; flex: 1; overflow-y: auto; margin-top: 10px; border-top: 1px solid rgba(0, 0, 0, 0.05); }
-        .lap-item { display: flex; justify-content: space-between; padding: 12px 15px; font-size: 14px; color: var(--text-main); border-bottom: 1px solid rgba(0, 0, 0, 0.02); }
+        /* macOS 风格计次列表优化 */
+        .laps-container { 
+            width: 100%; 
+            max-width: 440px; 
+            flex: 1; 
+            overflow-y: auto; 
+            margin-top: 0px; /* 拉近与时间的距离 */
+            border: none; /* 移除容器边框 */
+        }
+        
+        .lap-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 10px 15px; 
+            font-size: 14px; 
+            color: var(--text-main); 
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04); 
+            font-variant-numeric: tabular-nums;
+        }
+
+        .lap-header {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            font-weight: 600;
+            color: var(--text-sub);
+            z-index: 10;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* 列表对齐逻辑 */
+        .lap-col-id { width: 60px; flex-shrink: 0; }
+        .lap-col-split { flex: 1; text-align: right; color: var(--mac-accent); font-weight: 500; }
+        .lap-col-total { flex: 1; text-align: right; color: var(--text-sub); }
 
         .picker-container { display: flex; align-items: center; justify-content: center; gap: 5px; height: 220px; position: relative; }
         .column-group { position: relative; width: 80px; height: 220px; display: flex; align-items: center; justify-content: center; }
@@ -158,30 +188,8 @@
         .static-unit { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: var(--mac-accent); pointer-events: none; }
         .picker-highlight { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 50px; background: rgba(0, 0, 0, 0.04); border-radius: 10px; pointer-events: none; }
 
-        /* iPad特定适配 */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .window.is-fullscreen {
-                height: 100vh !important;
-                min-height: -webkit-fill-available;
-            }
-            
-            body {
-                min-height: -webkit-fill-available;
-            }
-        }
-
-        /* 横屏模式优化 */
-        @media (orientation: landscape) {
-            .window.is-fullscreen {
-                padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-            }
-        }
-
         @media (max-width: 768px) {
-            .window { 
-                width: 92vw; 
-                height: 70vh;
-            }
+            .window { width: 92vw; height: 70vh; }
             .display { font-size: 54px; }
             .date-info { font-size: 22px; }
             .tabs { gap: 5px; }
@@ -194,7 +202,6 @@
     <div class="bg-layer"></div>
 
     <div class="window" id="app-window" onclick="event.stopPropagation()">
-        <!-- 标题栏 -->
         <div class="title-bar">
             <div class="dot red" onclick="closeApp()"></div>
             <div class="dot yellow" onclick="minimizeApp()"></div>
@@ -207,7 +214,6 @@
             <button class="tab-btn" onclick="showTab('timer', event)">计时器</button>
         </div>
 
-        <!-- 时钟 -->
         <div id="clock-section" class="content">
             <div class="display-wrapper">
                 <div id="current-date" class="date-info"></div>
@@ -220,13 +226,17 @@
             <div class="controls"></div>
         </div>
 
-        <!-- 秒表 -->
         <div id="stopwatch-section" class="content hidden">
             <div class="display-wrapper">
                 <div class="display">
                     <span id="sw-min">00</span><span class="colon">:</span><span id="sw-sec">00</span><span class="dot-ms">.</span><span id="sw-ms" class="ms-style">00</span>
                 </div>
                 <div id="sw-laps-wrapper" class="laps-container hidden">
+                    <div class="lap-item lap-header">
+                        <span class="lap-col-id">序号</span>
+                        <span class="lap-col-split">分段时长</span>
+                        <span class="lap-col-total">累计总时</span>
+                    </div>
                     <div id="sw-laps-list"></div>
                 </div>
             </div>
@@ -236,7 +246,6 @@
             </div>
         </div>
 
-        <!-- 计时器 -->
         <div id="timer-section" class="content hidden">
             <div class="display-wrapper">
                 <div id="timer-picker-group" class="picker-container">
@@ -265,66 +274,22 @@
         
         function toggleFull() {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            
             if (!document.fullscreenElement) {
-                // iOS设备特殊处理[1,8](@ref)
                 if (isIOS) {
                     appWindow.classList.add('is-fullscreen');
-                    // 强制横屏体验
-                    document.body.style.width = '100vw';
-                    document.body.style.height = '100vh';
                 } else {
                     const requestFull = document.documentElement.requestFullscreen || 
                                        document.documentElement.webkitRequestFullscreen;
-                    
-                    if (requestFull) {
-                        requestFull.call(document.documentElement).then(() => {
-                            appWindow.classList.add('is-fullscreen');
-                        }).catch(err => {
-                            // 降级方案[8](@ref)
-                            appWindow.classList.add('is-fullscreen');
-                        });
-                    }
-                }
-            } else {
-                const exitFull = document.exitFullscreen || 
-                                document.webkitExitFullscreen;
-                
-                if (exitFull) {
-                    exitFull.call(document).then(() => {
-                        appWindow.classList.remove('is-fullscreen');
-                        if (isIOS) {
-                            document.body.style.width = '';
-                            document.body.style.height = '';
-                        }
+                    if (requestFull) requestFull.call(document.documentElement).then(() => {
+                        appWindow.classList.add('is-fullscreen');
                     });
                 }
+            } else {
+                const exitFull = document.exitFullscreen || document.webkitExitFullscreen;
+                if (exitFull) exitFull.call(document).then(() => {
+                    appWindow.classList.remove('is-fullscreen');
+                });
             }
-        }
-
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement) appWindow.classList.remove('is-fullscreen');
-            else appWindow.classList.add('is-fullscreen');
-        });
-
-        // 监听横竖屏变化[6](@ref)
-        window.addEventListener('resize', function() {
-            if (document.fullscreenElement || appWindow.classList.contains('is-fullscreen')) {
-                // 全屏状态下，重新计算布局
-                appWindow.style.height = '100vh';
-                appWindow.style.width = '100vw';
-            }
-        });
-
-        function toLunarDay(d) {
-            const numArr = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
-            const dInt = parseInt(d);
-            if (dInt === 10) return "初十";
-            if (dInt < 10) return "初" + numArr[dInt];
-            if (dInt < 20) return "十" + numArr[dInt % 10];
-            if (dInt === 20) return "二十";
-            if (dInt < 30) return "廿" + numArr[dInt % 10];
-            return dInt === 30 ? "三十" : d;
         }
 
         function updateClock() {
@@ -349,7 +314,17 @@
             } catch (e) { console.error(e); }
         }
 
-        // 秒表逻辑
+        function toLunarDay(d) {
+            const numArr = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+            const dInt = parseInt(d);
+            if (dInt === 10) return "初十";
+            if (dInt < 10) return "初" + numArr[dInt];
+            if (dInt < 20) return "十" + numArr[dInt % 10];
+            if (dInt === 20) return "二十";
+            if (dInt < 30) return "廿" + numArr[dInt % 10];
+            return dInt === 30 ? "三十" : d;
+        }
+
         let swInterval, swRunning = false, swTime = 0, lastLapTime = 0, laps = [];
         function formatTime(ms) {
             const m = String(Math.floor(ms / 60000)).padStart(2, '0');
@@ -385,7 +360,6 @@
         }
 
         function handleStopwatchSecondary() {
-            const secBtn = document.getElementById('sw-lap-reset');
             if (swRunning) {
                 const lap = swTime - lastLapTime;
                 laps.unshift({ id: laps.length + 1, lap, total: swTime });
@@ -395,8 +369,8 @@
                 swTime = 0; lastLapTime = 0; laps = []; renderLaps();
                 ['sw-ms', 'sw-sec', 'sw-min'].forEach(id => document.getElementById(id).textContent = '00');
                 document.getElementById('sw-start').textContent = '开始';
-                secBtn.textContent = '计次';
-                secBtn.disabled = true;
+                document.getElementById('sw-lap-reset').textContent = '计次';
+                document.getElementById('sw-lap-reset').disabled = true;
             }
         }
 
@@ -407,14 +381,14 @@
                 wrapper.classList.remove('hidden');
                 list.innerHTML = laps.map(l => `
                     <div class="lap-item">
-                        <span>计次 ${l.id}</span>
-                        <span>+${formatTime(l.lap)} &nbsp;&nbsp; ${formatTime(l.total)}</span>
+                        <span class="lap-col-id">计次 ${l.id}</span>
+                        <span class="lap-col-split">${formatTime(l.lap)}</span>
+                        <span class="lap-col-total">${formatTime(l.total)}</span>
                     </div>
                 `).join('');
             } else { wrapper.classList.add('hidden'); }
         }
 
-        // 计时器逻辑
         function initPickers() {
             const createItems = (id, count) => {
                 const col = document.getElementById(id);
@@ -433,7 +407,6 @@
         }
 
         let tmInterval, tmRunning = false, tmTotalSeconds = 0;
-
         function updateTimerDisplay() {
             document.getElementById('tm-h').textContent = String(Math.floor(tmTotalSeconds / 3600)).padStart(2, '0');
             document.getElementById('tm-m').textContent = String(Math.floor((tmTotalSeconds % 3600) / 60)).padStart(2, '0');
@@ -441,7 +414,6 @@
         }
 
         function toggleTimer() {
-            const btn = document.getElementById('tm-start');
             if (!tmRunning) {
                 if (tmTotalSeconds <= 0) {
                     const h = Math.round(document.getElementById('p-hour').scrollTop / 50);
@@ -449,16 +421,12 @@
                     const s = Math.round(document.getElementById('p-sec').scrollTop / 50);
                     tmTotalSeconds = h * 3600 + m * 60 + s;
                 }
-                
                 if (tmTotalSeconds <= 0) return;
-
                 tmRunning = true; 
-                btn.textContent = '暂停';
+                document.getElementById('tm-start').textContent = '暂停';
                 document.getElementById('timer-picker-group').classList.add('hidden');
                 document.getElementById('timer-display').classList.remove('hidden');
-                
                 updateTimerDisplay();
-
                 tmInterval = setInterval(() => {
                     if (tmTotalSeconds <= 0) { resetTimer(); return; }
                     tmTotalSeconds--; 
@@ -466,7 +434,7 @@
                 }, 1000);
             } else { 
                 tmRunning = false; 
-                btn.textContent = '继续'; 
+                document.getElementById('tm-start').textContent = '继续'; 
                 clearInterval(tmInterval); 
             }
         }
