@@ -1,0 +1,219 @@
+<title>RTX 50 系列移动端规格与性能天梯</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .bar-fill { width: 0%; transition: width 1.5s ease-out; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="text-center space-y-2 mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
+                RTX 50 系列移动端显卡全解析
+            </h1>
+            <p class="text-slate-400">核心规格参数 & Time Spy 性能基准测试</p>
+        </header>
+
+        <!-- Specs Table Section (New) -->
+        <div class="bg-slate-800 rounded-2xl overflow-hidden shadow-xl border border-slate-700">
+            <div class="p-6 border-b border-slate-700">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                    核心规格参数
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
+                    <thead>
+                        <tr class="bg-slate-900/50 text-slate-400 text-xs md:text-sm uppercase tracking-wider">
+                            <th class="p-4 font-semibold border-b border-slate-700">显卡名称</th>
+                            <th class="p-4 font-semibold border-b border-slate-700">核心代号</th>
+                            <th class="p-4 font-semibold border-b border-slate-700">CUDA核心</th>
+                            <th class="p-4 font-semibold border-b border-slate-700">显存规格</th>
+                            <th class="p-4 font-semibold border-b border-slate-700">位宽</th>
+                            <th class="p-4 font-semibold border-b border-slate-700">功耗</th>
+                            <th class="p-4 font-semibold border-b border-slate-700 hidden lg:table-cell">架构/工艺</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700 text-sm">
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-white">RTX 5090 Laptop</td>
+                            <td class="p-4 text-slate-400">GB203</td>
+                            <td class="p-4 text-green-400 font-mono">10,496</td>
+                            <td class="p-4 text-white">24GB GDDR7</td>
+                            <td class="p-4 text-slate-400">256 bit</td>
+                            <td class="p-4 text-orange-400">175W</td>
+                            <td class="p-4 text-slate-500 hidden lg:table-cell">Blackwell / 5nm</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-white">RTX 5080 Laptop</td>
+                            <td class="p-4 text-slate-400">GB203</td>
+                            <td class="p-4 text-green-400 font-mono">7,680</td>
+                            <td class="p-4 text-white">16GB GDDR7</td>
+                            <td class="p-4 text-slate-400">256 bit</td>
+                            <td class="p-4 text-orange-400">175W</td>
+                            <td class="p-4 text-slate-500 hidden lg:table-cell">Blackwell / 5nm</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-white">RTX 5070 Ti Laptop</td>
+                            <td class="p-4 text-slate-400">GB205</td>
+                            <td class="p-4 text-green-400 font-mono">5,888</td>
+                            <td class="p-4 text-white">12GB GDDR7</td>
+                            <td class="p-4 text-slate-400">192 bit</td>
+                            <td class="p-4 text-orange-300">140W</td>
+                            <td class="p-4 text-slate-500 hidden lg:table-cell">Blackwell / 5nm</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-white">RTX 5070 Laptop</td>
+                            <td class="p-4 text-slate-400">GB206 (完整)</td>
+                            <td class="p-4 text-green-400 font-mono">4,608</td>
+                            <td class="p-4 text-white">8GB GDDR7</td>
+                            <td class="p-4 text-slate-400">128 bit</td>
+                            <td class="p-4 text-green-300">115W</td>
+                            <td class="p-4 text-slate-500 hidden lg:table-cell">Blackwell / 5nm</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-white">RTX 5060 Laptop</td>
+                            <td class="p-4 text-slate-400">GB206</td>
+                            <td class="p-4 text-green-400 font-mono">3,328</td>
+                            <td class="p-4 text-white">8GB GDDR7</td>
+                            <td class="p-4 text-slate-400">128 bit</td>
+                            <td class="p-4 text-green-300">115W</td>
+                            <td class="p-4 text-slate-500 hidden lg:table-cell">Blackwell / 5nm</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-white">RTX 5050 Laptop</td>
+                            <td class="p-4 text-slate-400">GB207 (完整)</td>
+                            <td class="p-4 text-green-400 font-mono">2,560</td>
+                            <td class="p-4 text-white">8GB GDDR7</td>
+                            <td class="p-4 text-slate-400">128 bit</td>
+                            <td class="p-4 text-green-300">115W</td>
+                            <td class="p-4 text-slate-500 hidden lg:table-cell">Blackwell / 5nm</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700">
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Time Spy 跑分对比
+            </h2>
+            
+            <div id="chart-container" class="space-y-5">
+                <!-- Bars will be injected here via JS -->
+            </div>
+            
+            <div class="mt-6 flex justify-between text-xs text-slate-500 border-t border-slate-700 pt-2">
+                <span>0</span>
+                <span>5,000</span>
+                <span>10,000</span>
+                <span>15,000</span>
+                <span>20,000</span>
+                <span>25,000+</span>
+            </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div class="bg-slate-800 rounded-2xl overflow-hidden shadow-xl border border-slate-700">
+             <div class="p-6 border-b border-slate-700">
+                <h2 class="text-xl font-bold text-white">详细参数与评价</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-900/50 text-slate-400 text-sm uppercase tracking-wider">
+                            <th class="p-4 font-semibold border-b border-slate-700">显卡型号</th>
+                            <th class="p-4 font-semibold border-b border-slate-700 w-32">Time Spy 分</th>
+                            <th class="p-4 font-semibold border-b border-slate-700">性能简评</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700 text-sm md:text-base">
+                        <!-- Table rows -->
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-green-400">RTX 5090</td>
+                            <td class="p-4 font-mono text-white">24,779</td>
+                            <td class="p-4 text-slate-300">移动端性能王者，领先 RTX 4090 移动版约 8.7%。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-green-400">RTX 5080</td>
+                            <td class="p-4 font-mono text-white">22,680</td>
+                            <td class="p-4 text-slate-300">性能接近 RTX 4090 移动版（22,786分），比 RTX 4080 移动版提升约 18%。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-green-400">RTX 5070 Ti</td>
+                            <td class="p-4 font-mono text-white">17,809</td>
+                            <td class="p-4 text-slate-300">50系新增型号，性能约等于 RTX 4080 移动版（19,235分）的 92%，弥补了上代 70 与 80 间的断层。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-green-400">RTX 5070</td>
+                            <td class="p-4 font-mono text-white">14,145</td>
+                            <td class="p-4 text-slate-300">相比上代 RTX 4070 移动版（12,600分）提升约 12.3%。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-green-400">RTX 5060</td>
+                            <td class="p-4 font-mono text-white">12,335</td>
+                            <td class="p-4 text-slate-300">提升显著，性能略低于上代 RTX 4070 移动版，比 RTX 4060 移动版提升约 18.5%。</td>
+                        </tr>
+                         <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4 font-bold text-green-400">RTX 5050</td>
+                            <td class="p-4 font-mono text-white">9,968</td>
+                            <td class="p-4 text-slate-300">入门级主力，性能已接近上代 RTX 4060 移动版（10,408分）。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer class="text-center text-slate-600 text-sm pb-8">
+            数据来源：User Provided Data | Generated via Gemini
+        </footer>
+
+    </div>
+
+    <script>
+        const data = [
+            { name: "RTX 5090", score: 24779, color: "bg-green-500", width: "100%" },
+            { name: "RTX 5080", score: 22680, color: "bg-green-600", width: "91.5%" },
+            { name: "RTX 5070 Ti", score: 17809, color: "bg-emerald-600", width: "71.8%" },
+            { name: "RTX 5070", score: 14145, color: "bg-emerald-700", width: "57%" },
+            { name: "RTX 5060", score: 12335, color: "bg-teal-600", width: "49.7%" },
+            { name: "RTX 5050", score: 9968, color: "bg-teal-700", width: "40.2%" }
+        ];
+
+        const container = document.getElementById('chart-container');
+
+        data.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = "relative";
+            
+            row.innerHTML = `
+                <div class="flex items-center mb-1 justify-between">
+                    <span class="font-bold text-sm md:text-base w-32 shrink-0 ${index === data.length - 1 ? 'text-slate-500' : 'text-white'}">${item.name}</span>
+                    <span class="text-xs md:text-sm font-mono text-slate-300">${item.score.toLocaleString()}</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-4 md:h-5 overflow-hidden border border-slate-700/50">
+                    <div class="bar-fill h-full ${item.color} shadow-[0_0_10px_rgba(16,185,129,0.3)] relative group" style="width: 0%" data-width="${item.width}">
+                        <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+
+        // Trigger animation
+        setTimeout(() => {
+            const bars = document.querySelectorAll('.bar-fill');
+            bars.forEach(bar => {
+                bar.style.width = bar.getAttribute('data-width');
+            });
+        }, 100);
+    </script>
+</body>
+</html>
