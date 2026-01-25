@@ -322,7 +322,7 @@
                 const city = timeZoneRaw.split('/').pop().replace('_', ' ');
                 
                 // 拼接最终格式：时区：亚洲东京 (GMT+9) 
-                // 注：由于浏览器限制，获取“东京都”这种详细行政区划较难，通常显示为城市名
+                // 注：由于浏览器限制，获取"东京都"这种详细行政区划较难，通常显示为城市名
                 document.getElementById('location-name').textContent = `${city} (${gmtOffset})`;
                 // -----------------------
 
